@@ -71,14 +71,24 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 bg-slate-900/80 px-3.5 py-1.5 rounded-full border border-slate-700/50 text-xs text-amber-200/80">
-          <span>提問次數：</span>
-          <span id="questionCount" class="font-bold text-amber-400 text-sm">0</span>
+      <div class="flex items-center gap-2.5">
+        <!-- 剩餘提問額度 -->
+        <div class="flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-full border border-slate-700/60 text-xs text-slate-300">
+          <span>提問額度：</span>
+          <span id="remainingQuestions" class="font-bold text-amber-400 text-sm">100</span>
+          <span class="text-slate-500 text-[10px]">/ 100</span>
         </div>
-        <button id="toggleAudioBtn" onclick="toggleAudio()" class="px-3.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs flex items-center gap-1.5 transition">
+
+        <!-- 連續違規警告標籤 (預設隱藏) -->
+        <div id="invalidWarningBadge" class="hidden flex items-center gap-1 bg-rose-950/60 px-2.5 py-1.5 rounded-full border border-rose-500/50 text-xs text-rose-300 animate-pulse">
+          <span>⚠️ 違規警告:</span>
+          <span id="invalidCountText" class="font-bold text-rose-400">0</span>
+          <span class="text-rose-400/60 text-[10px]">/10</span>
+        </div>
+
+        <button id="toggleAudioBtn" onclick="toggleAudio()" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs flex items-center gap-1.5 transition">
           <span id="audioIcon">🔊</span>
-          <span id="audioText">語音朗讀: 開啟</span>
+          <span id="audioText" class="hidden sm:inline">語音: 開啟</span>
         </button>
       </div>
     </div>
@@ -477,6 +487,41 @@
 
   </div>
 
+  <!-- 彈窗 D：❌ 連續違規 10 次挑戰失敗 Modal -->
+  <div id="gameOverModal" class="hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="paper-card rounded-2xl w-full max-w-md overflow-hidden border-2 border-rose-600/80 shadow-[0_0_50px_rgba(225,29,72,0.4)] text-center p-6 space-y-4">
+      
+      <!-- 巨大紅色大叉叉 -->
+      <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
+        <div class="absolute inset-0 rounded-full bg-rose-600/20 animate-ping"></div>
+        <div class="w-20 h-20 rounded-full bg-rose-950/80 border-2 border-rose-500 flex items-center justify-center text-4xl shadow-inner">
+          ❌
+        </div>
+      </div>
+
+      <div>
+        <h3 class="serif-title font-black text-rose-400 text-xl tracking-wider">探長中止調查 · 挑戰失敗！</h3>
+        <p class="text-xs text-rose-200/80 mt-1">連續 10 次未遵守海龜湯提問規則</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed text-left space-y-2">
+        <p class="font-bold text-amber-300">💡 探長的話：</p>
+        <p>小偵探，你連續多次提出了「為什麼/誰/在哪裡」等開放式問題或破碎句子。</p>
+        <p class="text-slate-400">海龜湯的核心訓練是<strong>「提出具體猜測的是非題」</strong>（例如：『請問旁邊的木柴是不是濕了？』）。請深呼吸，理清思路後重新挑戰吧！</p>
+      </div>
+
+      <div>
+        <button 
+          onclick="location.reload()" 
+          class="w-full py-3 rounded-xl bg-gradient-to-r from-rose-700 to-rose-600 hover:from-rose-600 hover:to-rose-500 text-white font-bold text-sm shadow-lg transition flex items-center justify-center gap-2"
+        >
+          <span>🔄 重新開始挑戰</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- 頁尾 -->
   <footer class="border-t border-slate-900 bg-[#080a0f] py-3 text-center text-[11px] text-slate-500">
     小偵探推理寫作教室 · 國小高年級思維與語文增能教材
@@ -486,13 +531,20 @@
   <script>
     let currentCase = null;
     let unlockedClues = [1]; // 預設解鎖第 1 張
-    let questionCount = 0;
+    let isSpeechEnabled = true;
+
+    // 提問限制與規則懲罰設定
+    const MAX_TOTAL_QUESTIONS = 100;
+    const MAX_CONSECUTIVE_INVALID = 10;
+    let totalQuestionsAsked = 0;
+    let consecutiveInvalidCount = 0;
+    let isGameOver = false;
+
     let facts = {
       confirmed: [],
       ruledOut: [],
       irrelevant: []
     };
-    let isSpeechEnabled = true;
 
     // 初始化載入案件
     async function initGame() {
@@ -548,17 +600,31 @@
     // 提問處理
     async function handleAsk(e) {
       if (e) e.preventDefault();
+      if (isGameOver) return;
+
       const input = document.getElementById('questionInput');
+      const submitBtn = document.getElementById('submitAskBtn');
       const q = input.value.trim();
       if (!q) return;
 
-      const submitBtn = document.getElementById('submitAskBtn');
+      // 檢查是否已達 100 次上限
+      if (totalQuestionsAsked >= MAX_TOTAL_QUESTIONS) {
+        alert("你已用完 100 次提問額度！請直接點擊下方「撰寫結案報告書」來破案！");
+        openReportModal();
+        return;
+      }
+
       submitBtn.disabled = true;
       submitBtn.innerText = "探長推敲中...";
 
-      // 增加提問次數
-      questionCount++;
-      document.getElementById('questionCount').innerText = questionCount;
+      // 增加總提問次數並更新剩餘額度
+      totalQuestionsAsked++;
+      const remaining = Math.max(0, MAX_TOTAL_QUESTIONS - totalQuestionsAsked);
+      const remainingElem = document.getElementById('remainingQuestions');
+      if (remainingElem) {
+        remainingElem.innerText = remaining;
+        if (remaining <= 20) remainingElem.className = "font-bold text-rose-400 text-sm";
+      }
 
       // 渲染玩家問題
       appendMessage("user", q);
@@ -586,6 +652,44 @@
           speakText(data.reply);
         }
 
+        // 違規提問與懲罰機制判定
+        const isInvalid = data.answer_type === 'INVALID_FORMAT' || !data.is_complete_sentence;
+        const warningBadge = document.getElementById('invalidWarningBadge');
+        const invalidCountText = document.getElementById('invalidCountText');
+
+        if (isInvalid) {
+          consecutiveInvalidCount++;
+          if (warningBadge) warningBadge.classList.remove('hidden');
+          if (invalidCountText) invalidCountText.innerText = consecutiveInvalidCount;
+
+          // 連續 10 次違規 ➔ 觸發紅色大叉叉挑戰失敗！
+          if (consecutiveInvalidCount >= MAX_CONSECUTIVE_INVALID) {
+            isGameOver = true;
+            input.disabled = true;
+            submitBtn.disabled = true;
+            setTimeout(() => {
+              document.getElementById('gameOverModal').classList.remove('hidden');
+            }, 800);
+            return;
+          }
+        } else {
+          // 正常合規提問 ➔ 消除連續違規警告
+          consecutiveInvalidCount = 0;
+          if (warningBadge) warningBadge.classList.add('hidden');
+        }
+
+        // 若提問額度剛好用完 ➔ 鎖死輸入框並強制引導寫作
+        if (totalQuestionsAsked >= MAX_TOTAL_QUESTIONS) {
+          input.disabled = true;
+          input.placeholder = "已達到 100 次提問上限，請立即點擊下方「撰寫結案報告書」！";
+          submitBtn.disabled = true;
+          submitBtn.innerText = "額度已用完";
+          setTimeout(() => {
+            alert("你已經用完了 100 次提問機會！現在請根據手札記錄的所有線索，直接撰寫結案報告書來破案！");
+            openReportModal();
+          }, 1000);
+        }
+
         // 整理手札事實
         if (data.fact_summary) {
           addFactToNotebook(data.fact_category, data.fact_summary, q);
@@ -611,8 +715,10 @@
       } catch (err) {
         appendMessage("ai", "抱歉小偵探，探長剛才分心了，請再問我一次好嗎？", "IRRELEVANT", true);
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = "<span>送出提問</span><span>➔</span>";
+        if (!isGameOver && totalQuestionsAsked < MAX_TOTAL_QUESTIONS) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = "<span>送出提問</span><span>➔</span>";
+        }
       }
     }
 
