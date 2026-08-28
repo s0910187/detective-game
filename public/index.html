@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小偵探推理寫作教室 🕵️‍♂️ | 繁體中文海龜湯</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: 繁體中文字體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Zen Maru Gothic', 'Noto Serif TC', serif;
+      background: radial-gradient(circle at 50% 20%, #1a1e29 0%, #0b0d13 100%);
+      color: #e4decb;
+    }
+    .serif-title {
+      font-family: 'Noto Serif TC', serif;
+    }
+    .candle-glow {
+      text-shadow: 0 0 20px rgba(245, 180, 77, 0.4), 0 0 40px rgba(245, 180, 77, 0.15);
+    }
+    .paper-card {
+      background: #141722;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.7);
+    }
+    .clue-locked {
+      filter: grayscale(100%) brightness(30%) blur(2px);
+    }
+    .unlocked-pulse {
+      animation: pulseGlow 2s ease-in-out;
+    }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(245, 180, 77, 0.7); border-color: #f5b44d; }
+      70% { box-shadow: 0 0 30px 10px rgba(245, 180, 77, 0); border-color: #f5b44d; }
+      100% { box-shadow: 0 0 0 0 rgba(245, 180, 77, 0); }
+    }
+    /* 自訂捲軸 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0f15;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a3144;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d4af37;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-900">
+
+  <!-- 頂部導航列 -->
+  <header class="border-b border-amber-900/30 bg-[#0e111a]/80 backdrop-blur sticky top-0 z-40 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl shadow-inner">
+          🕵️‍♂️
+        </div>
+        <div>
+          <h1 class="serif-title font-black text-amber-300 text-lg tracking-wider">小偵探推理寫作教室</h1>
+          <p class="text-xs text-slate-400">國小高年級邏輯推理 · 精準提問 · 段落寫作訓練</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 bg-slate-900/80 px-3.5 py-1.5 rounded-full border border-slate-700/50 text-xs text-amber-200/80">
+          <span>提問次數：</span>
+          <span id="questionCount" class="font-bold text-amber-400 text-sm">0</span>
+        </div>
+        <button id="toggleAudioBtn" onclick="toggleAudio()" class="px-3.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs flex items-center gap-1.5 transition">
+          <span id="audioIcon">🔊</span>
+          <span id="audioText">語音朗讀: 開啟</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主畫面內容 -->
+  <main class="max-w-7xl mx-auto w-full p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+    
+    <!-- 左側欄：案件卷宗 & 4 張線索圖 (佔 7 格) -->
+    <section class="lg:col-span-7 flex flex-col gap-6">
+      
+      <!-- 案件描述卡片（湯面） -->
+      <div class="paper-card rounded-2xl p-5 sm:p-6 relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 opacity-5 pointer-events-none text-9xl">📜</div>
+        <div class="flex items-center justify-between mb-3 border-b border-amber-500/20 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">極密案件卷宗</span>
+            <h2 id="caseTitle" class="serif-title text-xl font-bold text-amber-100">案件 01：消失的晶瑩企鵝</h2>
+          </div>
+          <span id="caseDifficulty" class="text-xs text-amber-400">難度：⭐⭐⭐</span>
+        </div>
+        <p id="caseStory" class="text-sm sm:text-base leading-relaxed text-slate-300 whitespace-pre-line font-light">
+          載入案情中...
+        </p>
+      </div>
+
+      <!-- 四張線索圖收集區 -->
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <h3 class="serif-title text-base font-bold text-amber-300 flex items-center gap-2">
+            <span>🔍 案件調查手札與證物照片</span>
+            <span id="clueUnlockProgress" class="text-xs font-normal text-amber-400/70">(已解鎖 1 / 4)</span>
+          </h3>
+          <span class="text-xs text-slate-400">透過提問探索，逐步解鎖隱藏線索！</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- 線索卡 1 -->
+          <div id="clueCard-1" class="paper-card rounded-xl p-3 flex flex-col gap-2 transition-all duration-300 hover:border-amber-500/50 cursor-pointer" onclick="openLightbox(1)">
+            <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-slate-950 border border-slate-800">
+              <img id="clueImg-1" src="/images/clue1.png" alt="線索1" class="w-full h-full object-cover transition duration-500 hover:scale-105" />
+              <span id="clueBadge-1" class="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/80 text-white backdrop-blur">已公開</span>
+            </div>
+            <div>
+              <h4 id="clueTitle-1" class="text-xs sm:text-sm font-bold text-amber-200">線索 1：案發現場</h4>
+              <p id="clueDesc-1" class="text-[11px] text-slate-400 line-clamp-2 mt-0.5">鎖著的玻璃展示櫃完好無損，上方聚光燈直射空底座，底座微濕。</p>
+            </div>
+          </div>
+
+          <!-- 線索卡 2 -->
+          <div id="clueCard-2" class="paper-card rounded-xl p-3 flex flex-col gap-2 transition-all duration-300 hover:border-amber-500/50 cursor-pointer" onclick="openLightbox(2)">
+            <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-slate-950 border border-slate-800">
+              <img id="clueImg-2" src="/images/clue2.png" alt="線索2" class="w-full h-full object-cover clue-locked transition duration-500" />
+              <div id="clueLockOverlay-2" class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm text-center p-2">
+                <span class="text-2xl mb-1">🔒</span>
+                <span class="text-[11px] text-slate-400">透過提問深入調查解鎖</span>
+              </div>
+              <span id="clueBadge-2" class="hidden absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/80 text-white backdrop-blur">已解鎖</span>
+            </div>
+            <div>
+              <h4 id="clueTitle-2" class="text-xs sm:text-sm font-bold text-slate-400">線索 2：環境證物</h4>
+              <p id="clueDesc-2" class="text-[11px] text-slate-500 line-clamp-2 mt-0.5">❓ 尚未解鎖的環境證物</p>
+            </div>
+          </div>
+
+          <!-- 線索卡 3 -->
+          <div id="clueCard-3" class="paper-card rounded-xl p-3 flex flex-col gap-2 transition-all duration-300 hover:border-amber-500/50 cursor-pointer" onclick="openLightbox(3)">
+            <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-slate-950 border border-slate-800">
+              <img id="clueImg-3" src="/images/clue3.png" alt="線索3" class="w-full h-full object-cover clue-locked transition duration-500" />
+              <div id="clueLockOverlay-3" class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm text-center p-2">
+                <span class="text-2xl mb-1">🔒</span>
+                <span class="text-[11px] text-slate-400">透過提問深入調查解鎖</span>
+              </div>
+              <span id="clueBadge-3" class="hidden absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/80 text-white backdrop-blur">已解鎖</span>
+            </div>
+            <div>
+              <h4 id="clueTitle-3" class="text-xs sm:text-sm font-bold text-slate-400">線索 3：關鍵物品</h4>
+              <p id="clueDesc-3" class="text-[11px] text-slate-500 line-clamp-2 mt-0.5">❓ 尚未解鎖的物品細節</p>
+            </div>
+          </div>
+
+          <!-- 線索卡 4 -->
+          <div id="clueCard-4" class="paper-card rounded-xl p-3 flex flex-col gap-2 transition-all duration-300 border-dashed border-amber-500/30 hover:border-amber-500 cursor-pointer" onclick="openLightbox(4)">
+            <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-slate-950 border border-slate-800">
+              <img id="clueImg-4" src="/images/clue4.png" alt="線索4" class="w-full h-full object-cover clue-locked transition duration-500" />
+              <div id="clueLockOverlay-4" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm text-center p-2">
+                <span class="text-2xl mb-1">🏆</span>
+                <span class="text-[11px] text-amber-300 font-bold">提交「結案報告」破案解鎖</span>
+              </div>
+              <span id="clueBadge-4" class="hidden absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-slate-900 font-black shadow">🎉 真相大白</span>
+            </div>
+            <div>
+              <h4 id="clueTitle-4" class="text-xs sm:text-sm font-bold text-slate-400">線索 4：事件真相還原</h4>
+              <p id="clueDesc-4" class="text-[11px] text-slate-500 line-clamp-2 mt-0.5">完成寫作並經探長核可後揭曉真相！</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右側欄：對話排查 / 偵探手札 / 結案報告 (佔 5 格) -->
+    <section class="lg:col-span-5 flex flex-col h-[650px] paper-card rounded-2xl overflow-hidden">
+      
+      <!-- 頂部頁籤切換 -->
+      <div class="flex items-center border-b border-amber-900/40 bg-slate-950/60 p-1.5">
+        <button id="tabChatBtn" onclick="switchTab('chat')" class="flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 transition flex items-center justify-center gap-1.5">
+          <span>💬</span>
+          <span>向探長提問排查</span>
+        </button>
+        <button id="tabNotebookBtn" onclick="switchTab('notebook')" class="flex-1 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5">
+          <span>📋</span>
+          <span>偵探分類手札</span>
+          <span id="factBadgeCount" class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-amber-300 font-bold">0</span>
+        </button>
+      </div>
+
+      <!-- 頁籤內容 A：提問對話窗 -->
+      <div id="tabChat" class="flex-1 flex flex-col justify-between overflow-hidden p-4">
+        <!-- 訊息串流區 -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto space-y-3.5 pr-2">
+          <!-- 探長開場白 -->
+          <div class="flex items-start gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">
+              🕵️‍♂️
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs sm:text-sm text-slate-200 leading-relaxed">
+              <p>哈囉小偵探！我是福爾摩斯探長。</p>
+              <p class="mt-1.5 text-slate-400">💡 **海龜湯核心規則**：你只能提出可以用<span class="text-emerald-400 font-bold">【是】</span>或<span class="text-rose-400 font-bold">【不是】</span>回答的是非題，**不能直接問「為什麼/誰/在哪裡」**喔！</p>
+              <p class="mt-1.5 text-amber-300">例如你可以問：「請問昨晚學校有正常供電嗎？」或「請問教室的大門是反鎖的嗎？」</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提問輸入區 -->
+        <div class="mt-3 pt-3 border-t border-slate-800">
+          <form id="askForm" onsubmit="handleAsk(event)" class="flex flex-col gap-2">
+            <div class="relative">
+              <textarea 
+                id="questionInput" 
+                rows="2" 
+                placeholder="請輸入你的猜測（是非題）...（例如：請問昨晚教室裡有人在嗎？）"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500/80 transition resize-none"
+                onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); handleAsk(event); }"
+              ></textarea>
+            </div>
+            <div class="flex items-center justify-between">
+              <span id="cooldownNotice" class="text-[11px] text-slate-500">💡 提示：善用觀察細節來縮小範圍</span>
+              <button 
+                type="submit" 
+                id="submitAskBtn" 
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow transition disabled:opacity-50"
+              >
+                <span>送出提問</span>
+                <span>➔</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 頁籤內容 B：偵探分類手札 -->
+      <div id="tabNotebook" class="hidden flex-1 overflow-y-auto p-4 space-y-4">
+        <div>
+          <h4 class="text-xs font-bold text-emerald-400 flex items-center gap-1.5 mb-2">
+            <span>🟢 已確認的事實（AI 回答「是」或「關鍵線索」）</span>
+          </h4>
+          <ul id="factsConfirmed" class="space-y-1.5 text-xs text-slate-300">
+            <li class="p-2 rounded bg-slate-900/60 border border-slate-800 text-slate-500 italic">尚無確認事實，請開始提問...</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-rose-400 flex items-center gap-1.5 mb-2">
+            <span>🔴 已排除的可能（AI 回答「不是」）</span>
+          </h4>
+          <ul id="factsRuledOut" class="space-y-1.5 text-xs text-slate-300">
+            <li class="p-2 rounded bg-slate-900/60 border border-slate-800 text-slate-500 italic">尚無排除項目...</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 flex items-center gap-1.5 mb-2">
+            <span>⚪ 與案情無關的細節</span>
+          </h4>
+          <ul id="factsIrrelevant" class="space-y-1.5 text-xs text-slate-300">
+            <li class="p-2 rounded bg-slate-900/60 border border-slate-800 text-slate-500 italic">尚無無關項目...</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 底部常駐：結案報告觸發按鈕 -->
+      <div class="p-3 bg-slate-950 border-t border-amber-900/30 flex items-center justify-between">
+        <div class="text-[11px] text-amber-400/80">
+          💡 已經掌握真相了嗎？
+        </div>
+        <button 
+          onclick="openReportModal()" 
+          class="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-bold text-xs transition flex items-center gap-1.5 shadow"
+        >
+          <span>✍️ 撰寫結案報告書</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 彈窗 A：結案報告撰寫與評分 Modal -->
+  <div id="reportModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="paper-card rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-amber-500/40 shadow-2xl">
+      
+      <!-- 彈窗標題 -->
+      <div class="p-4 bg-slate-950 border-b border-amber-900/40 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📜</span>
+          <h3 class="serif-title font-bold text-amber-300 text-base">小偵探結案報告書 · 邏輯與段落寫作</h3>
+        </div>
+        <button onclick="closeReportModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- 撰寫內容與鷹架 -->
+      <div id="reportFormSection" class="p-5 overflow-y-auto space-y-4 flex-1">
+        <div class="bg-amber-950/20 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200/90 leading-relaxed">
+          <p class="font-bold mb-1">🎯 寫作目標指引：</p>
+          <p id="reportHintText">請試著使用完整的因果句，向探長說明：1. 企鵝的真實材質是什麼？ 2. 為什麼企鵝會消失？ 3. 為什麼現場沒有留下大量積水？</p>
+        </div>
+
+        <!-- 連接詞鷹架按鈕 -->
+        <div>
+          <span class="text-xs text-slate-400 block mb-1.5 font-medium">💡 點擊快速加入連接詞（寫作鷹架）：</span>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="insertWord('因為……所以……')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-amber-600/30 text-amber-200 text-xs border border-slate-700 transition">因果：因為……所以……</button>
+            <button onclick="insertWord('雖然……但其實……')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-amber-600/30 text-amber-200 text-xs border border-slate-700 transition">轉折：雖然……但其實……</button>
+            <button onclick="insertWord('導致……')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-amber-600/30 text-amber-200 text-xs border border-slate-700 transition">結果：導致……</button>
+            <button onclick="insertWord('最後真相是……')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-amber-600/30 text-amber-200 text-xs border border-slate-700 transition">結尾：最後真相是……</button>
+          </div>
+        </div>
+
+        <!-- 寫作輸入框 -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">
+            結案報告內文（建議 50 ~ 120 字）：
+          </label>
+          <textarea 
+            id="reportInput" 
+            rows="6" 
+            placeholder="請在此處寫下一段具備起因、經過轉折與真相結果的完整段落..."
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 leading-relaxed resize-none"
+            oninput="updateReportCharCount()"
+          ></textarea>
+          <div class="flex justify-between items-center mt-1 text-[11px] text-slate-500">
+            <span>字數：<span id="reportCharCount" class="text-amber-400 font-bold">0</span> 字</span>
+            <span>AI 探長將針對「邏輯推理」、「因果連接」、「語句完整」三項評分</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 評分結果區 (預設隱藏) -->
+      <div id="reportResultSection" class="hidden p-5 overflow-y-auto space-y-4 flex-1">
+        <div id="passBadge" class="text-center py-2">
+          <!-- 通關 / 未通關徽章 -->
+        </div>
+
+        <!-- 三星評分量表 -->
+        <div class="grid grid-cols-3 gap-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-center">
+          <div>
+            <div class="text-xs text-slate-400">邏輯真相</div>
+            <div id="scoreLogic" class="text-amber-400 font-bold text-base mt-1">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400">因果結構</div>
+            <div id="scoreStructure" class="text-amber-400 font-bold text-base mt-1">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400">語句流暢</div>
+            <div id="scoreClarity" class="text-amber-400 font-bold text-base mt-1">⭐⭐⭐⭐⭐</div>
+          </div>
+        </div>
+
+        <!-- 探長評語 -->
+        <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-4">
+          <h4 class="text-xs font-bold text-amber-300 flex items-center gap-1.5 mb-1.5">
+            <span>🕵️‍♂️ 福爾摩斯探長評語：</span>
+          </h4>
+          <p id="reportFeedbackText" class="text-xs sm:text-sm text-slate-200 leading-relaxed font-light"></p>
+        </div>
+
+        <!-- 亮點 -->
+        <div id="reportHighlightBox" class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3 text-xs text-emerald-300 flex items-start gap-2">
+          <span>✨</span>
+          <span id="reportHighlightText">寫作亮點：</span>
+        </div>
+
+        <!-- 探長滿分示範短文與寫作仿作專區 -->
+        <div id="modelEssayCard" class="bg-slate-950/90 border border-amber-500/40 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h4 class="text-xs sm:text-sm font-bold text-amber-300 flex items-center gap-1.5">
+              <span>📖</span>
+              <span id="modelEssayTitle">探長滿分示範短文（寫作觀摩與仿作）</span>
+            </h4>
+            <button onclick="applyModelEssayForPractice()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-200 text-[11px] font-bold transition flex items-center gap-1">
+              <span>✍️</span>
+              <span>以此範本進行仿作練習</span>
+            </button>
+          </div>
+
+          <!-- 滿分範文內文 -->
+          <div id="modelEssayText" class="p-3.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-light">
+          </div>
+
+          <!-- 寫作邏輯與結構拆解 -->
+          <div>
+            <span class="text-[11px] font-bold text-slate-400 block mb-1.5">💡 寫作技巧與段落結構解析：</span>
+            <div id="modelEssayBreakdownList" class="space-y-1.5 text-xs text-slate-300">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 彈窗底部操作按鈕 -->
+      <div class="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+        <button onclick="closeReportModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition">
+          關閉
+        </button>
+        <div class="flex gap-2">
+          <button 
+            id="retryReportBtn" 
+            onclick="resetReportForm()" 
+            class="hidden px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-amber-300 transition"
+          >
+            ✏️ 修改再試一次
+          </button>
+          <button 
+            id="submitReportBtn" 
+            onclick="handleSubmitReport()" 
+            class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow transition disabled:opacity-50"
+          >
+            <span>提交探長評分</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 彈窗 B：圖片高解析度放大檢視 Lightbox (支援縮放、滾輪、拖曳平移) -->
+  <div id="lightboxModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6" onclick="closeLightbox()">
+    
+    <!-- 頂部資訊與操作提示列 -->
+    <div class="w-full max-w-5xl flex items-center justify-between z-10" onclick="event.stopPropagation()">
+      <div class="flex items-center gap-3">
+        <span class="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 shadow">
+          <span>🔍</span>
+          <span>高倍率線索放大鏡</span>
+        </span>
+        <h4 id="lightboxTitle" class="text-amber-100 font-bold text-sm sm:text-base">線索標題</h4>
+      </div>
+
+      <!-- 關閉按鈕 -->
+      <button onclick="closeLightbox()" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-rose-600 border border-slate-600 text-white flex items-center justify-center text-sm transition shadow-lg">✕</button>
+    </div>
+
+    <!-- 中間：圖片縮放檢視區域 -->
+    <div class="relative w-full max-w-5xl flex-1 my-3 flex items-center justify-center overflow-hidden rounded-2xl border border-amber-500/30 bg-slate-950/80 shadow-2xl select-none" id="lightboxViewport" onclick="event.stopPropagation()">
+      <img 
+        id="lightboxImg" 
+        src="" 
+        alt="線索大圖" 
+        class="max-w-full max-h-[70vh] object-contain transition-transform duration-75 cursor-grab" 
+        draggable="false"
+      />
+      
+      <!-- 拖曳提示浮水印 -->
+      <div id="zoomHintBadge" class="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur border border-slate-700 text-[11px] text-slate-300 pointer-events-none flex items-center gap-1.5">
+        <span>🖱️ 滾輪可縮放，放大後按住滑鼠左鍵可拖曳平移</span>
+      </div>
+
+      <!-- 目前縮放比例浮水印 -->
+      <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-amber-500/20 backdrop-blur border border-amber-500/40 text-[11px] text-amber-300 font-mono font-bold pointer-events-none">
+        <span id="zoomPercentText">100%</span>
+      </div>
+    </div>
+
+    <!-- 底部：控制工具列與線索說明 -->
+    <div class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 rounded-xl z-10" onclick="event.stopPropagation()">
+      <p id="lightboxDesc" class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl text-center sm:text-left"></p>
+      
+      <!-- 縮放操作按鈕群 -->
+      <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-700 shrink-0">
+        <button onclick="changeZoom(-0.25)" class="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold flex items-center justify-center text-sm border border-slate-700 transition" title="縮小">➖</button>
+        <button onclick="resetZoom()" class="px-2.5 h-7 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 transition" title="重設比例">↺ 100%</button>
+        <button onclick="changeZoom(0.25)" class="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold flex items-center justify-center text-sm border border-slate-700 transition" title="放大">➕</button>
+        <span class="text-slate-600 mx-1">|</span>
+        <button onclick="toggleFitOrFull()" class="px-2.5 h-7 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition">200% 特寫</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 頁尾 -->
+  <footer class="border-t border-slate-900 bg-[#080a0f] py-3 text-center text-[11px] text-slate-500">
+    小偵探推理寫作教室 · 國小高年級思維與語文增能教材
+  </footer>
+
+  <!-- 前端遊戲邏輯腳本 -->
+  <script>
+    let currentCase = null;
+    let unlockedClues = [1]; // 預設解鎖第 1 張
+    let questionCount = 0;
+    let facts = {
+      confirmed: [],
+      ruledOut: [],
+      irrelevant: []
+    };
+    let isSpeechEnabled = true;
+
+    // 初始化載入案件
+    async function initGame() {
+      try {
+        const res = await fetch('/api/case/case_01');
+        currentCase = await res.json();
+        renderCase();
+        initLightboxControls();
+      } catch (err) {
+        console.error("載入案件失敗:", err);
+      }
+    }
+
+    function renderCase() {
+      if (!currentCase) return;
+      document.getElementById('caseTitle').innerText = currentCase.title;
+      document.getElementById('caseDifficulty').innerText = `難度：${currentCase.difficulty}`;
+      document.getElementById('caseStory').innerText = currentCase.story;
+      document.getElementById('reportHintText').innerText = currentCase.scaffold?.hint || "";
+      updateClueUI();
+    }
+
+    // 更新線索圖 UI 狀態
+    function updateClueUI() {
+      if (!currentCase) return;
+      document.getElementById('clueUnlockProgress').innerText = `(已解鎖 ${unlockedClues.length} / 4)`;
+
+      for (let i = 1; i <= 4; i++) {
+        const isUnlocked = unlockedClues.includes(i);
+        const card = document.getElementById(`clueCard-${i}`);
+        const img = document.getElementById(`clueImg-${i}`);
+        const lock = document.getElementById(`clueLockOverlay-${i}`);
+        const badge = document.getElementById(`clueBadge-${i}`);
+        const title = document.getElementById(`clueTitle-${i}`);
+        const desc = document.getElementById(`clueDesc-${i}`);
+
+        const clueData = currentCase.clues.find(c => c.id === i);
+
+        if (isUnlocked) {
+          img.classList.remove('clue-locked');
+          if (lock) lock.classList.add('hidden');
+          if (badge) badge.classList.remove('hidden');
+          title.className = "text-xs sm:text-sm font-bold text-amber-200";
+          if (clueData) {
+            title.innerText = clueData.title;
+            desc.innerText = clueData.description;
+            desc.className = "text-[11px] text-slate-300 line-clamp-2 mt-0.5";
+          }
+        }
+      }
+    }
+
+    // 提問處理
+    async function handleAsk(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('questionInput');
+      const q = input.value.trim();
+      if (!q) return;
+
+      const submitBtn = document.getElementById('submitAskBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "探長推敲中...";
+
+      // 增加提問次數
+      questionCount++;
+      document.getElementById('questionCount').innerText = questionCount;
+
+      // 渲染玩家問題
+      appendMessage("user", q);
+      input.value = "";
+
+      try {
+        const customKey = localStorage.getItem('custom_ai_key') || "";
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            caseId: currentCase.id,
+            question: q,
+            unlockedClues: unlockedClues,
+            customApiKey: customKey
+          })
+        });
+        const data = await res.json();
+
+        // 渲染探長回覆
+        appendMessage("ai", data.reply, data.answer_type, data.is_complete_sentence);
+
+        // 語音朗讀
+        if (isSpeechEnabled && data.reply) {
+          speakText(data.reply);
+        }
+
+        // 整理手札事實
+        if (data.fact_summary) {
+          addFactToNotebook(data.fact_category, data.fact_summary, q);
+        }
+
+        // 檢查新線索解鎖
+        if (data.newlyUnlockedClue) {
+          const newId = data.newlyUnlockedClue.id;
+          if (!unlockedClues.includes(newId)) {
+            unlockedClues.push(newId);
+            // 更新本機線索資料庫
+            const cItem = currentCase.clues.find(c => c.id === newId);
+            if (cItem) {
+              cItem.description = data.newlyUnlockedClue.description;
+              cItem.image = data.newlyUnlockedClue.image || `/images/clue${newId}.png`;
+              cItem.unlocked = true;
+            }
+            updateClueUI();
+            triggerClueUnlockAnimation(newId, data.newlyUnlockedClue.title);
+          }
+        }
+
+      } catch (err) {
+        appendMessage("ai", "抱歉小偵探，探長剛才分心了，請再問我一次好嗎？", "IRRELEVANT", true);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "<span>送出提問</span><span>➔</span>";
+      }
+    }
+
+    // 渲染對話訊息
+    function appendMessage(sender, text, answerType = null, isComplete = true) {
+      const chat = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = "flex items-start gap-2.5";
+
+      if (sender === "user") {
+        div.className += " justify-end";
+        div.innerHTML = `
+          <div class="bg-amber-600/20 border border-amber-500/40 p-3 rounded-2xl rounded-tr-none max-w-[85%] text-xs sm:text-sm text-amber-100 leading-relaxed shadow">
+            <p>${escapeHtml(text)}</p>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-amber-500 border border-amber-400 flex items-center justify-center text-slate-900 font-bold text-xs shrink-0 shadow">
+            我
+          </div>
+        `;
+      } else {
+        let badgeHtml = "";
+        if (answerType === "YES") {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mr-1.5">【是 ⭕】</span>`;
+        } else if (answerType === "NO") {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 mr-1.5">【不是 ❌】</span>`;
+        } else if (answerType === "KEY_CLUE") {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-slate-950 font-black mr-1.5 shadow">【🔥 關鍵線索！】</span>`;
+        } else if (answerType === "IRRELEVANT") {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700/50 text-slate-400 border border-slate-600/40 mr-1.5">【與此無關 ⚪】</span>`;
+        } else if (answerType === "INVALID_FORMAT") {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/50 mr-1.5">【⚠️ 提問格式提醒】</span>`;
+        }
+
+        let sentenceHint = "";
+        if (!isComplete) {
+          sentenceHint = `<div class="mt-2 pt-2 border-t border-amber-500/20 text-[11px] text-amber-300 flex items-center gap-1">💡 語文小提示：試著把問題寫成有主詞、動詞的完整句子喔！</div>`;
+        }
+
+        div.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0 shadow">
+            🕵️‍♂️
+          </div>
+          <div class="bg-slate-900/95 border border-slate-800 p-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs sm:text-sm text-slate-200 leading-relaxed shadow">
+            <div>${badgeHtml}${escapeHtml(text)}</div>
+            ${sentenceHint}
+          </div>
+        `;
+      }
+
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // 線索解鎖動畫與通知
+    function triggerClueUnlockAnimation(clueId, clueTitle) {
+      const card = document.getElementById(`clueCard-${clueId}`);
+      if (card) {
+        card.classList.add('unlocked-pulse');
+        setTimeout(() => card.classList.remove('unlocked-pulse'), 2500);
+      }
+      // 在對話中插播解鎖廣播
+      const chat = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = "flex justify-center my-2";
+      div.innerHTML = `
+        <div class="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 border border-amber-400 text-amber-200 text-xs font-bold shadow-lg animate-bounce flex items-center gap-2">
+          <span>🔓 恭喜發現重大突破！已解鎖：</span>
+          <span class="text-amber-300 underline">${clueTitle}</span>
+        </div>
+      `;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // 整理手札事實
+    function addFactToNotebook(category, summary, rawQuestion) {
+      if (category === "CONFIRMED_FACT") {
+        facts.confirmed.push(summary);
+      } else if (category === "RULED_OUT") {
+        facts.ruledOut.push(summary);
+      } else {
+        facts.irrelevant.push(summary);
+      }
+
+      renderNotebook();
+    }
+
+    function renderNotebook() {
+      const confirmedUl = document.getElementById('factsConfirmed');
+      const ruledOutUl = document.getElementById('factsRuledOut');
+      const irrelevantUl = document.getElementById('factsIrrelevant');
+
+      const totalFacts = facts.confirmed.length + facts.ruledOut.length + facts.irrelevant.length;
+      document.getElementById('factBadgeCount').innerText = totalFacts;
+
+      if (facts.confirmed.length > 0) {
+        confirmedUl.innerHTML = facts.confirmed.map(f => `<li class="p-2 rounded bg-emerald-950/40 border border-emerald-500/30 text-emerald-200">✓ ${escapeHtml(f)}</li>`).join('');
+      }
+      if (facts.ruledOut.length > 0) {
+        ruledOutUl.innerHTML = facts.ruledOut.map(f => `<li class="p-2 rounded bg-rose-950/40 border border-rose-500/30 text-rose-200">✗ ${escapeHtml(f)}</li>`).join('');
+      }
+      if (facts.irrelevant.length > 0) {
+        irrelevantUl.innerHTML = facts.irrelevant.map(f => `<li class="p-2 rounded bg-slate-900/60 border border-slate-800 text-slate-400">○ ${escapeHtml(f)}</li>`).join('');
+      }
+    }
+
+    // 頁籤切換
+    function switchTab(tab) {
+      const tabChat = document.getElementById('tabChat');
+      const tabNotebook = document.getElementById('tabNotebook');
+      const btnChat = document.getElementById('tabChatBtn');
+      const btnNotebook = document.getElementById('tabNotebookBtn');
+
+      if (tab === 'chat') {
+        tabChat.classList.remove('hidden');
+        tabNotebook.classList.add('hidden');
+        btnChat.className = "flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 transition flex items-center justify-center gap-1.5";
+        btnNotebook.className = "flex-1 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5";
+      } else {
+        tabChat.classList.add('hidden');
+        tabNotebook.classList.remove('hidden');
+        btnNotebook.className = "flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 transition flex items-center justify-center gap-1.5";
+        btnChat.className = "flex-1 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5";
+      }
+    }
+
+    // 結案報告 Modal
+    function openReportModal() {
+      document.getElementById('reportModal').classList.remove('hidden');
+    }
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.add('hidden');
+    }
+    function insertWord(word) {
+      const input = document.getElementById('reportInput');
+      input.value += word + " ";
+      input.focus();
+      updateReportCharCount();
+    }
+    function updateReportCharCount() {
+      const val = document.getElementById('reportInput').value.trim();
+      document.getElementById('reportCharCount').innerText = val.length;
+    }
+    function resetReportForm() {
+      document.getElementById('reportFormSection').classList.remove('hidden');
+      document.getElementById('reportResultSection').classList.add('hidden');
+      document.getElementById('submitReportBtn').classList.remove('hidden');
+      document.getElementById('retryReportBtn').classList.add('hidden');
+    }
+
+    // 提交結案報告
+    async function handleSubmitReport() {
+      const report = document.getElementById('reportInput').value.trim();
+      if (!report) {
+        alert("請先撰寫結案報告內容喔！");
+        return;
+      }
+
+      const btn = document.getElementById('submitReportBtn');
+      btn.disabled = true;
+      btn.innerText = "探長評審審核中...";
+
+      try {
+        const customKey = localStorage.getItem('custom_ai_key') || "";
+        const res = await fetch('/api/submit-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            caseId: currentCase.id,
+            report: report,
+            customApiKey: customKey
+          })
+        });
+        const data = await res.json();
+
+        // 切換至結果畫面
+        document.getElementById('reportFormSection').classList.add('hidden');
+        document.getElementById('reportResultSection').classList.remove('hidden');
+        btn.classList.add('hidden');
+        document.getElementById('retryReportBtn').classList.remove('hidden');
+
+        // 星級評分
+        document.getElementById('scoreLogic').innerText = "⭐".repeat(data.scores?.logic || 1);
+        document.getElementById('scoreStructure').innerText = "⭐".repeat(data.scores?.structure || 1);
+        document.getElementById('scoreClarity').innerText = "⭐".repeat(data.scores?.clarity || 1);
+
+        document.getElementById('reportFeedbackText').innerText = data.feedback || "";
+        document.getElementById('reportHighlightText').innerText = `寫作亮點：${data.highlight || "條理清楚"}`;
+
+        const passBadge = document.getElementById('passBadge');
+        if (data.is_passed) {
+          passBadge.innerHTML = `
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-bold text-sm shadow animate-bounce">
+              <span>🎉 恭喜破案！獲得「特級榮譽小偵探」勳章！</span>
+            </div>
+          `;
+          // 解鎖線索 4 (真相大白圖)
+          if (!unlockedClues.includes(4)) {
+            unlockedClues.push(4);
+            const c4 = currentCase.clues.find(c => c.id === 4);
+            if (c4 && data.truthClue) {
+              c4.description = data.truthClue.description;
+              c4.unlocked = true;
+            }
+            updateClueUI();
+            triggerClueUnlockAnimation(4, "線索 4：事件真相還原");
+          }
+        } else {
+          passBadge.innerHTML = `
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 font-bold text-sm">
+              <span>🧐 還差一點點！請參考探長建議再補充修改喔！</span>
+            </div>
+          `;
+        }
+
+        // 渲染滿分示範短文與結構拆解
+        if (data.modelEssay) {
+          const essayTitle = document.getElementById('modelEssayTitle');
+          const essayText = document.getElementById('modelEssayText');
+          const breakdownList = document.getElementById('modelEssayBreakdownList');
+
+          if (essayTitle) essayTitle.innerText = data.modelEssay.title || "探長滿分示範短文（寫作觀摩與仿作）";
+          
+          if (essayText) {
+            // 將 【...】 替換為醒目的高亮連接詞標籤
+            let formattedContent = escapeHtml(data.modelEssay.content || "");
+            formattedContent = formattedContent.replace(/【(.*?)】/g, '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">【$1】</span>');
+            essayText.innerHTML = formattedContent;
+          }
+
+          if (breakdownList && data.modelEssay.breakdown) {
+            breakdownList.innerHTML = data.modelEssay.breakdown.map(item => `
+              <div class="p-2 rounded bg-slate-900 border border-slate-800 flex items-start gap-2">
+                <span class="font-bold text-amber-300 shrink-0 text-[11px]">${escapeHtml(item.tag)}</span>
+                <span class="text-slate-300 leading-relaxed text-[11px]">${escapeHtml(item.desc)}</span>
+              </div>
+            `).join('');
+          }
+        }
+
+        // 語音朗讀評語
+        if (isSpeechEnabled && data.feedback) {
+          speakText(data.feedback);
+        }
+
+      } catch (err) {
+        alert("評審連線失敗，請稍後再試！");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "<span>提交探長評分</span><span>➔</span>";
+      }
+    }
+
+    // 仿作練習：將範本結構帶入輸入框
+    function applyModelEssayForPractice() {
+      resetReportForm();
+      const input = document.getElementById('reportInput');
+      input.value = `昨晚暴風雨吹破了教室窗戶且造成全校電力中斷，老工友為了不讓幼苗凍死必須緊急在壁爐升火。\n\n【雖然】……【但因為】……【導致】……\n\n【其實】……【所以】……`;
+      input.focus();
+      updateReportCharCount();
+    }
+
+    // Lightbox 縮放與平移狀態
+    const zoomState = {
+      scale: 1,
+      posX: 0,
+      posY: 0,
+      isDragging: false,
+      startX: 0,
+      startY: 0
+    };
+
+    // 初始化 Lightbox 互動控制（滾輪縮放、按住拖曳、雙擊特寫）
+    function initLightboxControls() {
+      const viewport = document.getElementById('lightboxViewport');
+      const img = document.getElementById('lightboxImg');
+      if (!viewport || !img) return;
+
+      // 1. 滑鼠滾輪縮放
+      viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.2 : -0.2;
+        zoomAtPoint(delta, e.clientX, e.clientY);
+      }, { passive: false });
+
+      // 2. 滑鼠拖曳平移 (MouseDown)
+      img.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // 僅限左鍵
+        e.preventDefault();
+        zoomState.isDragging = true;
+        zoomState.startX = e.clientX - zoomState.posX;
+        zoomState.startY = e.clientY - zoomState.posY;
+        img.classList.remove('cursor-grab');
+        img.classList.add('cursor-grabbing');
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!zoomState.isDragging) return;
+        zoomState.posX = e.clientX - zoomState.startX;
+        zoomState.posY = e.clientY - zoomState.startY;
+        applyTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (zoomState.isDragging) {
+          zoomState.isDragging = false;
+          img.classList.remove('cursor-grabbing');
+          img.classList.add('cursor-grab');
+        }
+      });
+
+      // 3. 雙擊快速特寫切換 (100% <=> 200%)
+      img.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        if (zoomState.scale > 1.2) {
+          resetZoom();
+        } else {
+          zoomState.scale = 2.0;
+          applyTransform();
+        }
+      });
+
+      // 4. 觸控支援 (手機/平板)
+      let initialDistance = 0;
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          zoomState.isDragging = true;
+          zoomState.startX = e.touches[0].clientX - zoomState.posX;
+          zoomState.startY = e.touches[0].clientY - zoomState.posY;
+        } else if (e.touches.length === 2) {
+          initialDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && zoomState.isDragging) {
+          zoomState.posX = e.touches[0].clientX - zoomState.startX;
+          zoomState.posY = e.touches[0].clientY - zoomState.startY;
+          applyTransform();
+        } else if (e.touches.length === 2) {
+          const currentDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          if (initialDistance > 0) {
+            const factor = currentDistance / initialDistance;
+            zoomState.scale = Math.min(Math.max(0.8, zoomState.scale * (factor > 1 ? 1.05 : 0.95)), 4.0);
+            applyTransform();
+          }
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchend', () => {
+        zoomState.isDragging = false;
+        initialDistance = 0;
+      });
+    }
+
+    // 按比例縮放
+    function changeZoom(delta) {
+      zoomState.scale = Math.min(Math.max(0.75, zoomState.scale + delta), 4.5);
+      if (zoomState.scale <= 1) {
+        zoomState.posX = 0;
+        zoomState.posY = 0;
+      }
+      applyTransform();
+    }
+
+    // 滾輪針對當前位置縮放
+    function zoomAtPoint(delta, clientX, clientY) {
+      const newScale = Math.min(Math.max(0.75, zoomState.scale + delta), 4.5);
+      zoomState.scale = newScale;
+      if (newScale <= 1) {
+        zoomState.posX = 0;
+        zoomState.posY = 0;
+      }
+      applyTransform();
+    }
+
+    // 重設為 100% 原始大小
+    function resetZoom() {
+      zoomState.scale = 1;
+      zoomState.posX = 0;
+      zoomState.posY = 0;
+      applyTransform();
+    }
+
+    // 一鍵特寫 200% 切換
+    function toggleFitOrFull() {
+      if (zoomState.scale > 1.2) {
+        resetZoom();
+      } else {
+        zoomState.scale = 2.0;
+        applyTransform();
+      }
+    }
+
+    // 套用變換樣式與更新數值
+    function applyTransform() {
+      const img = document.getElementById('lightboxImg');
+      const percent = document.getElementById('zoomPercentText');
+      if (img) {
+        img.style.transform = `translate(${zoomState.posX}px, ${zoomState.posY}px) scale(${zoomState.scale})`;
+      }
+      if (percent) {
+        percent.innerText = `${Math.round(zoomState.scale * 100)}%`;
+      }
+    }
+
+    // Lightbox 開啟檢視
+    function openLightbox(clueId) {
+      const isUnlocked = unlockedClues.includes(clueId);
+      if (!isUnlocked) return;
+      const clueData = currentCase?.clues?.find(c => c.id === clueId);
+      
+      const title = clueData?.title || `線索 ${clueId}`;
+      const desc = clueData?.description || "";
+      const imgSrc = clueData?.image || `/images/clue${clueId}.png`;
+
+      const img = document.getElementById('lightboxImg');
+      img.src = imgSrc;
+      document.getElementById('lightboxTitle').innerText = title;
+      document.getElementById('lightboxDesc').innerText = desc;
+      
+      resetZoom();
+      document.getElementById('lightboxModal').classList.remove('hidden');
+    }
+
+    // Lightbox 關閉
+    function closeLightbox() {
+      document.getElementById('lightboxModal').classList.add('hidden');
+      resetZoom();
+    }
+
+    // 語音朗讀
+    function toggleAudio() {
+      isSpeechEnabled = !isSpeechEnabled;
+      document.getElementById('audioIcon').innerText = isSpeechEnabled ? "🔊" : "🔇";
+      document.getElementById('audioText').innerText = isSpeechEnabled ? "語音朗讀: 開啟" : "語音朗讀: 關閉";
+      if (!isSpeechEnabled) window.speechSynthesis.cancel();
+    }
+    function speakText(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "zh-TW";
+      utterance.rate = 1.05;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    // 初始化載入案件
+    async function initGame() {
+      try {
+        const res = await fetch('/api/case/case_01');
+        currentCase = await res.json();
+        renderCase();
+        initLightboxControls();
+      } catch (err) {
+        console.error("載入案件失敗:", err);
+      }
+    }
+
+    window.onload = initGame;
+  </script>
+</body>
+</html>

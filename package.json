@@ -1,0 +1,14 @@
+{
+  "name": "detective-game",
+  "version": "1.0.0",
+  "description": "國小高年級邏輯推理與寫作練習遊戲 - 繁體中文偵探小劇場",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}
